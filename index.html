@@ -98,7 +98,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <div class="trophy">⚽🇹🇭</div>
+            <div class="trophy">⚽</div>
          <div class="editable-field">
     <h1 class="display-field" id="titleDisplay" onclick="editTitle()" style="cursor: pointer; margin: 0;">I-League</h1>
     <input type="text" id="titleInput" style="display: none;" placeholder="e.g. I-League">
@@ -410,7 +410,7 @@
             const filledLength = Math.round((checkedCount / totalCount) * 10) || 0;
             const progressBar = '█'.repeat(filledLength) + '░'.repeat(10 - filledLength);
 
-            let text = `⚽🇹🇭 ${title}\n${teams}\n${date}\n${time}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
+            let text = `⚽ ${title}\n${teams}\n${date}\n${time}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
             
             getChecklistItems().forEach((item, index) => {
                 const cb = document.getElementById(`item${index}`);
