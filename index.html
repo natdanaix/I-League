@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#667eea">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <title>I-League Checklist</title>
+    <style>
+        /* --- CSS เดิม --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        input, button, textarea { -webkit-user-select: text; user-select: text; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center; 
+            justify-content: flex-start;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 30px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #667eea; padding-bottom: 20px; }
+        .trophy { font-size: 2.5em; margin-bottom: 10px; }
+        h1 { color: #333; font-size: 1.8em; margin-bottom: 10px; }
+        h1.display-field:hover { 
+            background: #e9ecef; 
+            border-radius: 4px;
+        }
+        .match-info { color: #666; font-size: 0.95em; line-height: 1.6; }
+        .editable-field { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+        .editable-field input { padding: 8px 12px; border: 2px solid #667eea; border-radius: 6px; font-size: 0.95em; width: auto; max-width: 100%; }
+        .editable-field button { padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em; }
+        .display-field { cursor: pointer; padding: 5px 10px; border-radius: 4px; transition: all 0.2s ease; }
+        .display-field:hover { background: #e9ecef; }
+        .checklist { margin-bottom: 30px; }
+        .progress-section { margin-bottom: 10px; }
+        .progress-label { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8em; color: #666; }
+        .progress-bar { width: 100%; height: 6px; background: #e9ecef; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); width: 0%; transition: width 0.3s ease; border-radius: 10px; }
+        .section-title { color: #667eea; font-weight: 600; margin: 20px 0 15px 0; font-size: 1.1em; }
+        
+        .checklist-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; margin-bottom: 10px; background: #f8f9fa;
+            border-radius: 8px; transition: background-color 0.2s; position: relative; width: 100%;
+        }
+        .drag-handle { flex: 0 0 auto; color: #ccc; padding: 5px 10px 5px 0; cursor: move; font-size: 1.2em; line-height: 1; touch-action: none; }
+        .checklist-item input[type="checkbox"] { flex: 0 0 auto; width: 22px; height: 22px; cursor: pointer; accent-color: #667eea; margin-right: 12px; }
+        .checklist-item label { flex: 1 1 auto; min-width: 0; cursor: default; pointer-events: none; color: #333; font-size: 0.95em; word-break: break-word; line-height: 1.4; margin-right: 8px; text-align: left; }
+        .checklist-item input[type="checkbox"]:checked + label { color: #999; text-decoration: line-through; }
+        .checklist-item .item-actions { flex: 0 0 auto; display: flex; gap: 6px; align-items: center; }
+        .item-btn { padding: 6px 10px; background: white; color: #667eea; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.8em; min-width: 35px; display: flex; justify-content: center; align-items: center; }
+        .item-btn.delete { color: #dc3545; border-color: #f5c6cb; }
+        .sortable-ghost { opacity: 0.4; background: #e0e3ff; border: 1px dashed #667eea; }
+
+        .actions { display: flex; gap: 10px; margin-top: 30px; flex-wrap: wrap; }
+        button.main-action { flex: 1; min-width: 150px; padding: 12px 20px; border: none; border-radius: 8px; font-size: 0.95em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .btn-copy { background: #667eea; color: white; }
+        .btn-copy:hover { background: #5568d3; }
+        .btn-reset { background: #e9ecef; color: #333; }
+        .btn-reset:hover { background: #dee2e6; }
+        .btn-uncheck { background: #ffc107; color: #333; }
+        .btn-uncheck:hover { background: #e0a800; }
+        
+        .add-item-section { display: flex; gap: 8px; margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 8px; }
+        .add-item-section input { flex-grow: 1; padding: 10px; border: 2px solid #667eea; border-radius: 6px; font-size: 0.95em; }
+        .add-item-section button { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        
+        .copy-feedback { display: none; position: fixed; top: 20px; right: 20px; background: #28a745; color: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); z-index: 1000; animation: slideIn 0.3s ease; }
+        .copy-feedback.show { display: block; }
+        
+        .edit-item-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 2000; justify-content: center; align-items: center; }
+        .edit-item-modal.show { display: flex; }
+        .edit-item-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 400px; }
+        .edit-item-content h2 { margin-bottom: 15px; color: #333; }
+        .edit-item-content input { width: 100%; padding: 12px; border: 2px solid #667eea; border-radius: 6px; margin-bottom: 20px; }
+        .edit-item-actions { display: flex; gap: 10px; }
+        .edit-item-actions button { flex: 1; padding: 10px; border: none; border-radius: 6px; cursor: pointer; }
+        .edit-item-actions .save { background: #667eea; color: white; }
+        .edit-item-actions .cancel { background: #e9ecef; color: #333; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @media (max-width: 768px) { body { padding: 10px; } .container { padding: 20px; margin-top: 10px; } .checklist-item { padding: 10px; } .add-item-section { flex-direction: column; } .add-item-section button { width: 100%; } .actions { flex-direction: column; } button.main-action { width: 100%; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="trophy">⚽🇹🇭</div>
+         <div class="editable-field">
+    <h1 class="display-field" id="titleDisplay" onclick="editTitle()" style="cursor: pointer; margin: 0;">I-League</h1>
+    <input type="text" id="titleInput" style="display: none;" placeholder="e.g. I-League">
+    <button id="titleBtn" style="display: none;" onclick="saveTitle()">Save</button>
+</div>
+            <div class="match-info">
+                <div class="editable-field">
+                    <span class="display-field" id="teamDisplay" onclick="editTeams()">Chanthaburi vs Sisaket</span>
+                    <input type="text" id="teamInput" style="display: none;" placeholder="e.g. Chanthaburi vs Sisaket">
+                    <button id="teamBtn" style="display: none;" onclick="saveTeams()">Save</button>
+                </div>
+                <div class="editable-field">
+                    <span class="display-field" id="dateDisplay" onclick="editDate()">📅 29 November 2025</span>
+                    <input type="date" id="dateInput" style="display: none;">
+                    <button id="dateBtn" style="display: none;" onclick="saveDate()">Save</button>
+                </div>
+                <div class="editable-field">
+                    <span class="display-field" id="timeDisplay" onclick="editTime()">⏰ Kickoff 6:30 PM</span>
+                    <input type="time" id="timeInput" style="display: none;">
+                    <button id="timeBtn" style="display: none;" onclick="saveTime()">Save</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="checklist">
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span>Status</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="section-title">📋 Check List</div>
+            <div style="text-align: right; margin-bottom: 10px;">
+                <button class="item-btn" onclick="uncheckAll()" style="padding: 8px 16px; font-size: 0.9em;">✖️ Uncheck All</button>
+            </div>
+            
+            <div id="checklistContainer">
+            </div>
+
+            <div class="add-item-section">
+                <input type="text" id="newItemInput" placeholder="Add new step...">
+                <button onclick="addNewItem()">➕ Add Step</button>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="main-action btn-copy" onclick="copyToClipboard()">📋 Copy Text</button>
+            <button class="main-action btn-reset" onclick="resetChecklist()">🔄 Reset</button>
+        </div>
+    </div>
+
+    <div class="copy-feedback" id="feedback">✓ Copied!</div>
+
+    <div class="edit-item-modal" id="editModal">
+        <div class="edit-item-content">
+            <h2>Edit Item</h2>
+            <input type="text" id="editItemInput" placeholder="Edit text">
+            <div class="edit-item-actions">
+                <button class="save" onclick="saveEditItem()">💾 Save</button>
+                <button class="cancel" onclick="closeEditModal()">❌ Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // รายการหลัก (Default) - แก้เป็นภาษาอังกฤษ
+        const defaultItems = [
+            'Camera signal to VOR',
+            'Camera Pan with OB at 02:00 PM',
+            'Calibrates line to 16M and Goal line',
+            'Camera Pan finished',
+            'Throw ball and Sync ball',
+            'PGM check from OB 3 screen (OFR case)',
+            'Vokkero test',
+            'Export file to sound test',
+            'RRA check',
+            'Referee field check 04:00 PM',
+            'Clear storage 05:00 PM',
+            'Prepare offside case and ball kick 1,2,3 step for referee check',
+            'Ready to kick-off'
+        ];
+
+        const STORAGE_KEY_ITEMS = 'checklistItems_v3';
+        const STORAGE_KEY_STATE = 'checklistState_v3';
+        const STORAGE_KEY_MATCH = 'matchInfo_v3';
+
+        let currentEditIndex = null;
+        let sortableInstance = null;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeData();
+            loadEditableFields();
+            renderChecklist();
+            initSortable();
+        });
+
+        function initializeData() {
+            const storedItems = JSON.parse(localStorage.getItem(STORAGE_KEY_ITEMS));
+            if (!storedItems || storedItems.length === 0) {
+                localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
+            }
+            loadChecklistState();
+        }
+
+        function initSortable() {
+            const el = document.getElementById('checklistContainer');
+            sortableInstance = new Sortable(el, {
+                animation: 200,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) {
+                    updateOrderAfterDrag();
+                }
+            });
+        }
+
+        function updateOrderAfterDrag() {
+            const container = document.getElementById('checklistContainer');
+            const itemElements = container.querySelectorAll('.checklist-item');
+            const newItems = [];
+            const newState = {};
+            itemElements.forEach((el, index) => {
+                const text = el.querySelector('label').innerText;
+                const isChecked = el.querySelector('input[type="checkbox"]').checked;
+                newItems.push(text);
+                newState[`item${index}`] = isChecked;
+            });
+            saveChecklistItems(newItems);
+            localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(newState));
+            renderChecklist();
+        }
+
+        function renderChecklist() {
+            const container = document.getElementById('checklistContainer');
+            container.innerHTML = '';
+            const items = getChecklistItems(); 
+            items.forEach((item, index) => {
+                const checked = getItemCheckedState(index);
+                const itemElement = document.createElement('div');
+                itemElement.className = 'checklist-item';
+                itemElement.innerHTML = `
+                    <div class="drag-handle">⋮⋮</div>
+                    <input type="checkbox" id="item${index}" ${checked ? 'checked' : ''} onchange="saveChecklistState(); updateProgress();">
+                    <label for="item${index}">${item}</label>
+                    <div class="item-actions">
+                        <button class="item-btn" onclick="openEditModal(${index})">✏️</button>
+                        <button class="item-btn delete" onclick="deleteItem(${index})">🗑️</button>
+                    </div>
+                `;
+                container.appendChild(itemElement);
+            });
+            updateProgress();
+        }
+
+        function getChecklistItems() {
+            const items = JSON.parse(localStorage.getItem(STORAGE_KEY_ITEMS));
+            return (items && items.length > 0) ? items : defaultItems;
+        }
+        function saveChecklistItems(items) { localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items)); }
+        function getItemCheckedState(index) { const state = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)) || {}; return state[`item${index}`] || false; }
+        function saveChecklistState() {
+            const items = getChecklistItems();
+            const state = {};
+            items.forEach((item, index) => {
+                const checkbox = document.getElementById(`item${index}`);
+                if (checkbox) state[`item${index}`] = checkbox.checked;
+            });
+            localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
+        }
+        function loadChecklistState() { JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)); }
+
+        /* --- ส่วนจัดการข้อมูล Title, ทีม, วันที่, เวลา --- */
+        function saveEditableFields() {
+            const data = {
+                title: document.getElementById('titleDisplay').textContent,
+                teams: document.getElementById('teamDisplay').textContent,
+                date: document.getElementById('dateDisplay').textContent,
+                time: document.getElementById('timeDisplay').textContent
+            };
+            localStorage.setItem(STORAGE_KEY_MATCH, JSON.stringify(data));
+        }
+        
+        function loadEditableFields() {
+            const data = JSON.parse(localStorage.getItem(STORAGE_KEY_MATCH));
+            if (data) {
+                if (data.title) document.getElementById('titleDisplay').textContent = data.title;
+                document.getElementById('teamDisplay').textContent = data.teams;
+                document.getElementById('dateDisplay').textContent = data.date;
+                document.getElementById('timeDisplay').textContent = data.time;
+            }
+        }
+
+        function editTitle() { 
+            const input = document.getElementById('titleInput');
+            input.value = document.getElementById('titleDisplay').textContent;
+            toggleField('title'); 
+        }
+        
+      function saveTitle() { 
+    const val = document.getElementById('titleInput').value.trim() || 'I-League';
+    saveField('title', val); 
+}
+
+        function editTeams() { toggleField('team'); }
+        function saveTeams() { 
+            const val = document.getElementById('teamInput').value.trim() || 'Chanthaburi vs Sisaket';
+            saveField('team', val); 
+        }
+        
+        function editDate() { 
+            const display = document.getElementById('dateDisplay');
+            const input = document.getElementById('dateInput');
+            const currentText = display.textContent.replace('📅 ', '');
+            const dateObj = new Date(currentText);
+            if(!isNaN(dateObj)) input.value = dateObj.toISOString().split('T')[0];
+            toggleField('date'); 
+        }
+        
+        function saveDate() { 
+            const val = document.getElementById('dateInput').value;
+            if(val) {
+                 const d = new Date(val);
+                 saveField('date', '📅 ' + d.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}));
+            } else { toggleField('date', false); }
+        }
+        
+        function editTime() { 
+             const display = document.getElementById('timeDisplay');
+             const input = document.getElementById('timeInput');
+             // แปลงเวลาจาก "⏰ Kickoff 6:30 PM" กลับเป็น 24hr format สำหรับ input
+             const timeText = display.textContent.replace('⏰ Kickoff ', '');
+             const time24 = convertTo24Hour(timeText);
+             input.value = time24;
+             toggleField('time'); 
+        }
+        
+        function saveTime() { 
+            const val = document.getElementById('timeInput').value;
+            if(val) {
+                // แปลงเวลาจาก 24hr เป็น 12hr พร้อม AM/PM
+                const time12 = convertTo12Hour(val);
+                saveField('time', '⏰ Kickoff ' + time12);
+            } else { 
+                toggleField('time', false); 
+            }
+        }
+
+        // ฟังก์ชันแปลงเวลาจาก 24hr เป็น 12hr พร้อม AM/PM
+        function convertTo12Hour(time24) {
+            const [hours, minutes] = time24.split(':');
+            let hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            hour = hour % 12 || 12; // แปลง 0 เป็น 12
+            return `${hour}:${minutes} ${ampm}`;
+        }
+
+        // ฟังก์ชันแปลงเวลาจาก 12hr + AM/PM เป็น 24hr
+        function convertTo24Hour(time12) {
+            const match = time12.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return '18:30'; // ค่า default ถ้าแปลงไม่ได้
+            
+            let hour = parseInt(match[1]);
+            const minutes = match[2];
+            const ampm = match[3].toUpperCase();
+            
+            if (ampm === 'PM' && hour !== 12) hour += 12;
+            if (ampm === 'AM' && hour === 12) hour = 0;
+            
+            return `${hour.toString().padStart(2, '0')}:${minutes}`;
+        }
+        
+        function toggleField(id, showInput = true) {
+            const display = document.getElementById(id + 'Display');
+            const input = document.getElementById(id + 'Input');
+            const btn = document.getElementById(id + 'Btn');
+            if (showInput) {
+                display.style.display = 'none';
+                input.style.display = 'inline-block';
+                btn.style.display = 'inline-block';
+                input.focus();
+            } else {
+                display.style.display = 'inline-block';
+                input.style.display = 'none';
+                btn.style.display = 'none';
+            }
+        }
+        
+        function saveField(id, newVal) {
+            const display = document.getElementById(id + 'Display');
+            display.textContent = newVal;
+            toggleField(id, false);
+            saveEditableFields();
+        }
+
+        /* --- ส่วน Copy และ Reset --- */
+        function copyToClipboard() {
+            const title = document.getElementById('titleDisplay').textContent;
+            const teams = document.getElementById('teamDisplay').textContent;
+            const date = document.getElementById('dateDisplay').textContent;
+            const time = document.getElementById('timeDisplay').textContent;
+            const percent = document.getElementById('progressPercent').textContent;
+            
+            const checkedCount = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const totalCount = document.querySelectorAll('input[type="checkbox"]').length;
+            const filledLength = Math.round((checkedCount / totalCount) * 10) || 0;
+            const progressBar = '█'.repeat(filledLength) + '░'.repeat(10 - filledLength);
+
+            let text = `⚽🇹🇭 ${title}\n${teams}\n${date}\n${time}\n\n📋 Check List\nStatus: [${progressBar}] ${percent}\n\n`;
+            
+            getChecklistItems().forEach((item, index) => {
+                const cb = document.getElementById(`item${index}`);
+                text += `${cb && cb.checked ? '✅' : '⬜'} ${item}\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                const fb = document.getElementById('feedback');
+                fb.classList.add('show');
+                setTimeout(() => fb.classList.remove('show'), 2000);
+            });
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            const checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+            const total = checkboxes.length;
+            const pct = total === 0 ? 0 : Math.round((checked / total) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressPercent').textContent = pct + '%';
+        }
+
+        function uncheckAll() {
+            if(confirm('Uncheck all items?')) {
+                const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = false);
+                saveChecklistState();
+                updateProgress();
+            }
+        }
+        
+        function resetChecklist() {
+            if(confirm('Reset all checks? (Items will return to default)')) {
+                localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(defaultItems));
+                localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify({}));
+                initializeData();
+                renderChecklist();
+            }
+        }
+
+        /* --- ส่วนจัดการ Item (เพิ่ม/ลบ/แก้ไข) --- */
+        function addNewItem() {
+            const input = document.getElementById('newItemInput');
+            const val = input.value.trim();
+            if(!val) return;
+            const items = getChecklistItems();
+            items.push(val);
+            saveChecklistItems(items);
+            input.value = '';
+            renderChecklist();
+        }
+
+        function deleteItem(index) {
+            if(confirm('Delete this item?')) {
+                let items = getChecklistItems();
+                items.splice(index, 1);
+                if (items.length === 0) { items = [...defaultItems]; }
+                saveChecklistItems(items);
+                localStorage.removeItem(STORAGE_KEY_STATE);
+                renderChecklist();
+            }
+        }
+
+        function openEditModal(index) {
+            currentEditIndex = index;
+            document.getElementById('editItemInput').value = getChecklistItems()[index];
+            document.getElementById('editModal').classList.add('show');
+            document.getElementById('editItemInput').focus();
+        }
+        
+        function closeEditModal() { 
+            document.getElementById('editModal').classList.remove('show'); 
+            currentEditIndex = null; 
+        }
+        
+        function saveEditItem() {
+            if(currentEditIndex === null) return;
+            const val = document.getElementById('editItemInput').value.trim();
+            if(val) {
+                const items = getChecklistItems();
+                items[currentEditIndex] = val;
+                saveChecklistItems(items);
+                renderChecklist();
+                closeEditModal();
+            }
+        }
+
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if(document.activeElement.id === 'newItemInput') addNewItem();
+                if(document.activeElement.id === 'editItemInput') saveEditItem();
+                if(document.activeElement.id === 'teamInput') saveTeams();
+                if(document.activeElement.id === 'titleInput') saveTitle();
+            }
+        });
+        
+        document.getElementById('editModal').addEventListener('click', e => {
+            if(e.target.id === 'editModal') closeEditModal();
+        });
+    </script>
+</body>
+</html>
